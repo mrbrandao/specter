@@ -1,0 +1,63 @@
+#!/bin/bash
+file="$2"
+out="$3"
+requiresfile="requires-list.txt"
+
+generate_parse() {
+  rpmbuild -ba "$file" 2>&1|grep 'is needed'|awk -F'is' '{print $1}'|awk '{$1=$1;print}'|sed -E 's/[()~]//g; s/^crate/rust-/g; s/ with crate/, rust-/g;s,/,+,g' > crateparse-"$file"
+  echo -e "\033[0;32mOK: Created the file \033[0;33mcrateparse-$file\033[0m"
+}
+
+parse() {
+  while IFS= read -r line; do
+    line=$(echo "$line"|awk '{print $1}'|awk -F'[()]' '{print $3}'|sed 's/\//+/')
+    echo "rust-$line"
+  done < "$file"
+}
+
+search_dep() {
+	local builds
+	>"$requiresfile" 2>&1 >/dev/null
+  for i in `parse`;do
+		echo "Searching $i$out"
+    dnf search "$i""$out"
+		if [ $? == 0 ];then
+			builds+="BuildRequires: $i$out;"
+		fi
+  done
+	echo -e "\033[32mGenerating BuildRequires list:\033[0m"
+	IFS=';' read -ra build <<< "$builds"
+	for i in "${build[@]}";do echo $i|tee -a "$requiresfile";done
+	echo -e "\033[32mThe file \033[33m$requiresfile\033[32m has been generated with the list\033[0m"
+}
+
+install_dep() {
+  for i in `parse`;do
+		echo "Searching $i"
+    sudo dnf -y install "$i""$out"
+  done
+
+}
+
+
+case "$1" in
+  generate)
+	  generate_parse
+	;;
+	search)
+		search_dep
+	;;
+	install)
+		install_dep
+	;;
+  parse)
+    parse $file
+  ;;
+	*)
+		echo -e "Usage:
+		$0 generate specfile # generate the dependencies parses
+		$0 search parsedep # use the generated parse file to search for dependencies
+		$0 install parsedep # use to install the parsed dependencies
+		"
+esac
+
