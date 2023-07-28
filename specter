@@ -2,6 +2,8 @@
 file="$2"
 out="$3"
 install="$4"
+crate_api="https://crates.io/api/v1/crates"
+build_root="${BUILD_ROOT:-$HOME/rpmbuild/SOURCES/}"
 
 #tput colors
 yellow=$(tput setaf 3)
@@ -14,15 +16,21 @@ missing_packages() {
   printf "%s\n" "${green}OK${normal}: Created the file ${yellow}crateparse-$file${normal}"
 }
 
+get_crate() {
+  name="$2"
+  version="$3"
+  curl -L "$crate_api"/"$name"/"$version"/download -o "$build_root$name-$version.crate"
+}
+
 crate_parse() {
   while IFS= read -r line; do
     line=$(echo "$line"|\
-        awk -F'is' '{print $1}'|\
-        awk '{$1=$1;print}'| \
+        awk -F'is needed by' '{print $1}'|\
+        awk '{$1=$1;print}'|\
         sed -E 's/[()~]//g; 
             s/^crate/rust-/g; 
             s/ with crate/, rust-/g;
-            s,/,+,g;'| \
+            s,/,+,g;'|\
         sed "s/+\([^+, ]*\)/+\1$out/g"
       )
     echo "$line"
@@ -105,14 +113,19 @@ cmd() {
     declared)
       show_missing_declared
     ;;
+    parse)
+      crate_parse
+    ;;
+    getcrate)
+      get_crate "$@"
+    ;;
   	*)
-  		echo -e "Usage:
-      $0 init specfile                # generate the inital dependencies file
-  		$0 search parsedep              # use the generated parse file to search for dependencies
-  		$0 search parsedep -devel       # append the word -devel in the search
-  		$0 search parsedep -devel -i    # append the word -devel in the search and install the missing packages
-  		$0 declared specfile  pattern   # list the unique declared missing BuildRequires 
-  		"
+      printf "Usage:\n"
+      printf "%-55s %-80s\n" "${green}$0 ${yellow}init ${red}specfile${normal}" "# generate the inital dependencies file"
+      printf "%-55s %-80s\n" "${green}$0 ${yellow}search ${red}parsedep${normal}" "# use the generated parse file to search for dependencies"
+  		printf "%-55s %-80s\n" "${green}$0 ${yellow}search ${red}parsedep -devel${normal}" "# append the word -devel in the search"
+  		printf "%-55s %-80s\n" "${green}$0 ${yellow}search ${red}parsedep -devel -i${normal}" "# append the word -devel in the search and install the missing packages"
+  		printf "%-55s %-80s\n" "${green}$0 ${yellow}declared ${red}specfile pattern${normal}" "# list the unique declared missing BuildRequires"
   esac
 }
 
