@@ -1,6 +1,6 @@
 SHELL=/bin/bash
 INSTALL_DIR="$(HOME)/bin"
-FILES="crateparse"
+FILES="specter"
 FILES+="getcrate"
 FILES+="vparse.py"
 
