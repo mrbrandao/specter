@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+cmd="$1"
 file="$2"
 out="$3"
 install="$4"
@@ -99,38 +100,56 @@ show_missing_declared(){
   rpmbuild -ba "$file" 2>&1|grep "$out"|awk '{$1=$1;print}'|awk '{print $1}'|uniq
 }
 
-cmd() {
-  case "$1" in
-    init)
-      missing_packages
-  	;;
-  	search)
-  		search_dep
-  	;;
-    requires)
-      create_build_requires
-    ;;
-    declared)
-      show_missing_declared
-    ;;
-    parse)
-      crate_parse
-    ;;
-    getcrate)
-      get_crate "$@"
-    ;;
-  	*)
-      printf "Usage:\n"
-      printf "%-55s %-80s\n" "${green}$0 ${yellow}init ${red}specfile${normal}" "# generate the inital dependencies file"
-      printf "%-55s %-80s\n" "${green}$0 ${yellow}search ${red}parsedep${normal}" "# use the generated parse file to search for dependencies"
-  		printf "%-55s %-80s\n" "${green}$0 ${yellow}search ${red}parsedep -devel${normal}" "# append the word -devel in the search"
-  		printf "%-55s %-80s\n" "${green}$0 ${yellow}search ${red}parsedep -devel -i${normal}" "# append the word -devel in the search and install the missing packages"
-  		printf "%-55s %-80s\n" "${green}$0 ${yellow}declared ${red}specfile pattern${normal}" "# list the unique declared missing BuildRequires"
-  esac
+show_help(){
+  name=$(basename "$0")
+  printf "Usage:\n"
+  declare -A cmd_help=(
+    [init]="# generates a specter file for parsing missing dependencies"
+    [search]="# search, list or install dependencies"
+    [requires]="# print a BuildRequires list"
+    [declared]="# list the declared missing dependencies from the spec file"
+    [parse]="# print the parsing result from the specter file"
+    [getcrate]="# Download a crate file, using name and version"
+    [examples]="# print usage examples"
+    [help]="# this help command"
+  )
+  for key in "${!cmd_help[@]}";do
+    value="${cmd_help[$key]}"
+    printf "%-13s %s\n" "${green}$key" "${normal}$value"
+  done
+
 }
 
 main() {
-  cmd "$@"
+  case "$cmd" in
+    init)
+      missing_packages
+  	  ;;
+  	search)
+  		search_dep
+  	  ;;
+    requires)
+      create_build_requires
+      ;;
+    declared)
+      show_missing_declared
+      ;;
+    parse)
+      crate_parse
+      ;;
+    getcrate)
+      get_crate "$@"
+      ;;
+    examples)
+      show_examples
+      ;;
+    help|h)
+      show_help
+      ;;
+  	*)
+      show_help
+     ;;
+  esac
 }
 
 main "$@"
