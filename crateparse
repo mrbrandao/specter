@@ -3,6 +3,11 @@ file="$2"
 out="$3"
 requiresfile="requires-list.txt"
 
+#colors
+green=$(tput setaf 2)
+red=$(tput setaf 1)
+normal=$(tput sgr0)
+
 missing_packages() {
   rpmbuild -ba "$file" 2>&1|grep 'is needed by' > crateparse-"$file"
   echo -e "\033[0;32mOK: Created the file \033[0;33mcrateparse-$file\033[0m"
@@ -22,13 +27,42 @@ crate_parse() {
 parse() {
   tf="/tmp/tf"
   crate_parse > "$tf"
-  #maxver=$(cat|awk '{print $4}')
-  printf "%-40s %-10s %-10s %-15s\n" "Package Name" "Min Ver" "Max Ver" "Available Ver"
+  printf "%-40s %-10s %-10s %-15s %-10s\n" "Package Name" "Min Ver" "Max Ver" "Available Ver" "Installable"
   while read -r line; do
     pkg=$(echo "$line"|awk '{print $1}')
-    ver=$(echo "$line"|awk '{print $3}'|sed 's/,//g')
-    printf "%-40s %-10s\n" "$pkg" "$ver"
+    minver=$(echo "$line"|awk '{print $3}'|sed 's/,//g')
+    maxver=$(echo "$line"|awk '{print $6}'|sed 's/,//g')
+    avaver=$(search_ver)
+    sup=$(check_ver "$avaver" "$minver" "$maxver")
+    printf "%-40s %-10s %-10s %-15s %-10s\n" "$pkg$out" "$minver" "$maxver" "$avaver" "$sup"
   done < "$tf"
+}
+
+check_ver(){
+  local sup
+  if [[ ("$avaver" > "$minver" || "$avaver" == "$minver" ) && "$avaver" < "$maxver" ]];then
+    sup="${green}OK${normal}"
+  elif [[ ( -z "$minver" || -z "$maxver" ) && ( -n "$avaver" ) ]];then
+    sup="${green}OK${normal}"
+  else
+    sup="${red}NOT${normal}"
+  fi
+  printf "%s" "$sup"
+}
+
+search_ver(){
+  local getver
+  for i in $pkg$out;do
+    getver=$(dnf info "$i" 2>&1 /dev/null |\
+      grep 'Version'|\
+      awk -F':' '{print $2}'|\
+      awk '{$1=$1;print}')
+    if [ -z "$getver" ]; then
+      getver="Missing Package"
+      break
+		fi
+  done
+  printf "%s" "$getver"
 }
 
 search_dep() {
