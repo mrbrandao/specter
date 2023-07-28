@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 file="$2"
 out="$3"
-requiresfile="requires-list.txt"
+install="$4"
 
 #tput colors
 yellow=$(tput setaf 3)
@@ -19,13 +19,17 @@ crate_parse() {
     line=$(echo "$line"|\
         awk -F'is' '{print $1}'|\
         awk '{$1=$1;print}'| \
-        sed -E 's/[()~]//g; s/^crate/rust-/g; s/ with crate/, rust-/g;s,/,+,g'
+        sed -E 's/[()~]//g; 
+            s/^crate/rust-/g; 
+            s/ with crate/, rust-/g;
+            s,/,+,g;'| \
+        sed "s/+\([^+, ]*\)/+\1$out/g"
       )
     echo "$line"
   done < "$file"
 }
 
-list() {
+search_dep() {
   tf="$(mktemp)"
   crate_parse > "$tf"
   printf "%-40s %-10s %-10s %-15s %-10s\n" "Package Name" "Min Ver" "Max Ver" "Available Ver" "Installable"
@@ -34,8 +38,8 @@ list() {
     minver=$(echo "$line"|awk '{print $3}'|sed 's/,//g')
     maxver=$(echo "$line"|awk '{print $6}'|sed 's/,//g')
     avaver=$(search_ver)
-    sup=$(check_ver "$avaver" "$minver" "$maxver")
-    printf "%-40s %-10s %-10s %-15s %-10s\n" "$pkg$out" "$minver" "$maxver" "$avaver" "$sup"
+    sup=$(check_ver "$avaver" "$minver" "$maxver" "$pkg")
+    printf "%-40s %-10s %-10s %-15s %-10s\n" "$pkg" "$minver" "$maxver" "$avaver" "$sup"
   done < "$tf"
   rm -f "$tf"
 }
@@ -43,17 +47,19 @@ list() {
 create_build_requires(){
   brf="$(mktemp)"
   crate_parse > "$brf"
-  while read -r line; do
-    echo "$line"
-  done < "$brf"
+  sed -i 's/^/BuildRequires:  /' "$brf"
+  cat "$brf"
+  rm -f "$brf"
 }
 
 check_ver(){
   local sup
   if [[ ("$avaver" > "$minver" || "$avaver" == "$minver" ) && "$avaver" < "$maxver" ]];then
     sup="${green}OK${normal}"
+    install_dep "$pkg"
   elif [[ ( -z "$minver" || -z "$maxver" ) && ( -n "$avaver" ) ]];then
     sup="${green}OK${normal}"
+    install_dep "$pkg"
   else
     sup="${red}NOT${normal}"
   fi
@@ -62,7 +68,7 @@ check_ver(){
 
 search_ver(){
   local getver
-  for i in $pkg$out;do
+  for i in $pkg;do
     getver=$(dnf info "$i" 2>&1 /dev/null |\
       grep 'Version'|\
       awk -F':' '{print $2}'|\
@@ -76,36 +82,36 @@ search_ver(){
 }
 
 install_dep() {
-  for i in $(crate_parse);do
-		echo "Searching $i"
-    sudo dnf -y install "$i""$out"
-  done
+  if [ -n "$install" ];then 
+    sudo dnf -y install "$pkg" > /dev/null 2>&1
+  fi
+}
 
+show_missing_declared(){
+  rpmbuild -ba "$file" 2>&1|grep "$out"|awk '{$1=$1;print}'|awk '{print $1}'|uniq
 }
 
 cmd() {
   case "$1" in
-    generate)
+    init)
       missing_packages
   	;;
   	search)
   		search_dep
   	;;
-  	install)
-  		install_dep
-  	;;
-    list)
-      list
-    ;;
     requires)
-      crate_parse
-      #create_build_requires
+      create_build_requires
+    ;;
+    declared)
+      show_missing_declared
     ;;
   	*)
   		echo -e "Usage:
-  		$0 generate specfile # generate the dependencies parses
-  		$0 search parsedep # use the generated parse file to search for dependencies
-  		$0 install parsedep # use to install the parsed dependencies
+      $0 init specfile                # generate the inital dependencies file
+  		$0 search parsedep              # use the generated parse file to search for dependencies
+  		$0 search parsedep -devel       # append the word -devel in the search
+  		$0 search parsedep -devel -i    # append the word -devel in the search and install the missing packages
+  		$0 declared specfile  pattern   # list the unique declared missing BuildRequires 
   		"
   esac
 }
