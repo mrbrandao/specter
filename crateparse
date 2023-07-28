@@ -3,14 +3,15 @@ file="$2"
 out="$3"
 requiresfile="requires-list.txt"
 
-#colors
+#tput colors
+yellow=$(tput setaf 3)
 green=$(tput setaf 2)
 red=$(tput setaf 1)
 normal=$(tput sgr0)
 
 missing_packages() {
   rpmbuild -ba "$file" 2>&1|grep 'is needed by' > crateparse-"$file"
-  echo -e "\033[0;32mOK: Created the file \033[0;33mcrateparse-$file\033[0m"
+  printf "%s\n" "${green}OK${normal}: Created the file ${yellow}crateparse-$file${normal}"
 }
 
 crate_parse() {
@@ -24,8 +25,8 @@ crate_parse() {
   done < "$file"
 }
 
-parse() {
-  tf="/tmp/tf"
+list() {
+  tf="$(mktemp)"
   crate_parse > "$tf"
   printf "%-40s %-10s %-10s %-15s %-10s\n" "Package Name" "Min Ver" "Max Ver" "Available Ver" "Installable"
   while read -r line; do
@@ -36,6 +37,15 @@ parse() {
     sup=$(check_ver "$avaver" "$minver" "$maxver")
     printf "%-40s %-10s %-10s %-15s %-10s\n" "$pkg$out" "$minver" "$maxver" "$avaver" "$sup"
   done < "$tf"
+  rm -f "$tf"
+}
+
+create_build_requires(){
+  brf="$(mktemp)"
+  crate_parse > "$brf"
+  while read -r line; do
+    echo "$line"
+  done < "$brf"
 }
 
 check_ver(){
@@ -65,29 +75,6 @@ search_ver(){
   printf "%s" "$getver"
 }
 
-search_dep() {
-	local builds
-  pkg=$(crate_parse|awk '{print $1}')
-  for i in $pkg;do
-		echo "Searching $i$out"
-    getver=$(dnf info "$i""$out"|\
-      grep 'Version'|\
-      awk -F':' '{print $2}'|\
-      awk '{$1=$1;print}')
-    if [ -n "$getver" ]; then
-			builds+="BuildRequires: $i$out >= $getver;"
-    else
-      builds+="BuildRequires: $i$out #Missing package;"
-		fi
-  done
-	echo -e "\033[32mGenerating BuildRequires list:\033[0m"
-	IFS=';' read -ra build <<< "$builds"
-	for i in "${build[@]}";do 
-    echo "$i"|tee -a "$requiresfile"
-  done
-	echo -e "\033[32mThe file \033[33m$requiresfile\033[32m has been generated with the list\033[0m"
-}
-
 install_dep() {
   for i in $(crate_parse);do
 		echo "Searching $i"
@@ -96,26 +83,35 @@ install_dep() {
 
 }
 
+cmd() {
+  case "$1" in
+    generate)
+      missing_packages
+  	;;
+  	search)
+  		search_dep
+  	;;
+  	install)
+  		install_dep
+  	;;
+    list)
+      list
+    ;;
+    requires)
+      crate_parse
+      #create_build_requires
+    ;;
+  	*)
+  		echo -e "Usage:
+  		$0 generate specfile # generate the dependencies parses
+  		$0 search parsedep # use the generated parse file to search for dependencies
+  		$0 install parsedep # use to install the parsed dependencies
+  		"
+  esac
+}
 
-case "$1" in
-  generate)
-    missing_packages
-    save_parse
-	;;
-	search)
-		search_dep
-	;;
-	install)
-		install_dep
-	;;
-  parse)
-    parse
-  ;;
-	*)
-		echo -e "Usage:
-		$0 generate specfile # generate the dependencies parses
-		$0 search parsedep # use the generated parse file to search for dependencies
-		$0 install parsedep # use to install the parsed dependencies
-		"
-esac
+main() {
+  cmd "$@"
+}
 
+main "$@"
