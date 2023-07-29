@@ -95,8 +95,8 @@ search_ver(){
 }
 
 install_dep() {
-  install="$4"
-  if [[ ( -n "$install" && "$install" == "-i" ) ]];then
+ 	flag="$install"
+  if [[ ( -n "$flag" && "$flag" == "-i" ) ]];then
     sudo dnf -y install "$pkg" > /dev/null 2>&1
   fi
 }
@@ -152,6 +152,13 @@ show_help(){
 }
 
 main() {
+	if [[ "$#" == 4 && "$install" != "-i" ]];then
+		version="$install"
+	elif [[ "$#" -lt 2 ]];then
+		show_help
+		exit 1
+	fi
+	
   case "$cmd" in
     init)
       missing_packages
