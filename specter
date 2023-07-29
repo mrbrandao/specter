@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
+name=$(basename "$0")
 cmd="$1"
 file="$2"
 out="$3"
-install="$4"
 crate_api="https://crates.io/api/v1/crates"
 build_root="${BUILD_ROOT:-$HOME/rpmbuild/SOURCES/}"
 
@@ -10,11 +10,12 @@ build_root="${BUILD_ROOT:-$HOME/rpmbuild/SOURCES/}"
 yellow=$(tput setaf 3)
 green=$(tput setaf 2)
 red=$(tput setaf 1)
+cyan=$(tput setaf 6)
 normal=$(tput sgr0)
 
 missing_packages() {
-  rpmbuild -ba "$file" 2>&1|grep 'is needed by' > crateparse-"$file"
-  printf "%s\n" "${green}OK${normal}: Created the file ${yellow}crateparse-$file${normal}"
+  rpmbuild -ba "$file" 2>&1|grep 'is needed by' > "${name}-$file"
+  printf "%s\n" "${green}OK${normal}: Created the file ${yellow}${name}-$file${normal}"
 }
 
 get_crate() {
@@ -26,13 +27,13 @@ get_crate() {
 crate_parse() {
   while IFS= read -r line; do
     line=$(echo "$line"|\
-        awk -F'is needed by' '{print $1}'|\
-        awk '{$1=$1;print}'|\
-        sed -E 's/[()~]//g; 
-            s/^crate/rust-/g; 
-            s/ with crate/, rust-/g;
-            s,/,+,g;'|\
-        sed "s/+\([^+, ]*\)/+\1$out/g"
+      awk -F'is needed by' '{print $1}'|\
+      awk '{$1=$1;print}'|\
+      sed -E 's/[()~]//g; \
+          s/^crate/rust-/g; \
+          s/ with crate/, rust-/g; \
+          s,/,+,g;'|\
+      sed "s/+\([^+, ]*\)/+\1$out/g"
       )
     echo "$line"
   done < "$file"
@@ -85,13 +86,14 @@ search_ver(){
     if [ -z "$getver" ]; then
       getver="Missing Package"
       break
-		fi
+    fi
   done
   printf "%s" "$getver"
 }
 
 install_dep() {
-  if [ -n "$install" ];then 
+  install="$4"
+  if [[ ( -n "$install" && "$install" == "-i" ) ]];then
     sudo dnf -y install "$pkg" > /dev/null 2>&1
   fi
 }
@@ -101,7 +103,6 @@ show_missing_declared(){
 }
 
 show_help(){
-  name=$(basename "$0")
   printf "Usage:\n"
   declare -A cmd_help=(
     [init]="# generates a specter file for parsing missing dependencies"
@@ -110,7 +111,6 @@ show_help(){
     [declared]="# list the declared missing dependencies from the spec file"
     [parse]="# print the parsing result from the specter file"
     [getcrate]="# Download a crate file, using name and version"
-    [examples]="# print usage examples"
     [help]="# this help command"
   )
   for key in "${!cmd_help[@]}";do
@@ -118,37 +118,62 @@ show_help(){
     printf "%-13s %s\n" "${green}$key" "${normal}$value"
   done
 
+  echo -ne "Examples:
+  # Creating the $name-foo.spec file for parsing dependencies
+  ${cyan}${name} ${green}init ${yellow}foo.spec${normal}
+
+  # Using the $name-foo.spec file to search missing packages
+  ${cyan}${name} ${green}search ${yellow}$name-foo.spec${normal}
+
+  # packages might usually have the \"-devel\" at the end, search appending words at the end of the package name:
+  ${cyan}${name} ${green}search ${yellow}${name}-foo.spec ${red}-devel${normal}
+
+  # you can automatically install the missing packages when searching
+  ${cyan}${name} ${green}search ${yellow}$name-foo.spec ${red}-devel -i${normal}
+
+  # copying the BuildRequires list to the clipboard, to be used on the foo.spec file
+  ${cyan}${name} ${green}requires ${yellow}$name-foo.spec${red}|xsel --clipboard${normal}
+
+  # downloading bar-0.1.0.crates to $HOME/rpmbuild/SOURCES/
+  ${cyan}${name} ${green}getcrate ${yellow}bar ${red}0.1.0${normal}
+
+  # downloading bar-0.1.0.crate to a custom path
+  ${red}BUILD_ROOT=/opt/rpmbuild/SOURCES/ ${cyan}${name} ${green}getcrate ${yellow}bar ${red}0.1.0${normal}
+
+  #listing the still missing packages declared as BuildRequires in foo.spec
+  ${cyan}${name} ${green}declared ${yellow}foo.spec${normal}
+
+  # print the $name-foo.spec parsing style
+  ${cyan}$name ${green}parse ${yellow}$name-foo.spec ${red}-devel${normal}
+"
 }
 
 main() {
   case "$cmd" in
     init)
       missing_packages
-  	  ;;
-  	search)
-  		search_dep
-  	  ;;
+    ;;
+    search)
+      search_dep
+    ;;
     requires)
       create_build_requires
-      ;;
+    ;;
     declared)
       show_missing_declared
-      ;;
+    ;;
     parse)
       crate_parse
-      ;;
+    ;;
     getcrate)
       get_crate "$@"
-      ;;
-    examples)
-      show_examples
-      ;;
-    help|h)
+    ;;
+    help)
       show_help
-      ;;
-  	*)
+    ;;
+    *)
       show_help
-     ;;
+    ;;
   esac
 }
 
