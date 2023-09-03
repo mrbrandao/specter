@@ -16,6 +16,7 @@ cyan=$(tput setaf 87)
 normal=$(tput sgr0)
 
 missing_packages() {
+  #/usr/bin/cargo2rpm --path Cargo.toml buildrequires --with-check
   rpmbuild -ba "$file" 2>&1|grep 'is needed by' > "${name}-$file"
   printf "%s\n" "${green}OK${normal}: Created the file ${yellow}${name}-$file${normal}"
 }
