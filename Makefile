@@ -1,8 +1,8 @@
 SHELL=/bin/bash
 INSTALL_DIR="$(HOME)/bin"
 FILES="specter"
-FILES+="getcrate"
-FILES+="vparse.py"
+#FILES+="getcrate"
+#FILES+="vparse.py"
 
 uninstall:
 	@(for i in $(FILES);do \
