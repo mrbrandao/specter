@@ -135,6 +135,17 @@ show_missing_declared(){
   rpmbuild -ba "$file" 2>&1|grep "$out"|awk '{$1=$1;print}'|awk '{print $1}'|uniq
 }
 
+do_all(){
+  pkg="$2"
+  ver="$3"
+  rust2rpm "$pkg" "$ver"
+  $0 getcrate "$pkg" "$ver"
+  if ! rpmbuild -ba rust-"$pkg".spec; then
+    $0 init rust-"$pkg".spec
+    $0 search specter-rust-"$pkg".spec -devel -i
+  fi
+}
+
 show_help(){
   printf "Usage:\n"
   declare -A cmd_help=(
@@ -146,6 +157,7 @@ show_help(){
     [getcrate]="# Download a crate file, using name and version"
     [depinstall]="# Install dependencies from an rpm file"
     [copr]="# create and build a package on copr"
+    [start]="# start the package project and try to build"
     [help]="# this help command"
   )
   for key in "${!cmd_help[@]}";do
@@ -186,6 +198,10 @@ show_help(){
 
   # create and build a package on copr
   ${cyan}${name} ${green}copr ${yellow}rust-bar my-copr-project${normal}
+
+  # start the project and try to build
+  ${cyan}${name} ${green}start ${yellow}foo 0.1.0${normal}
+
 "
 }
 
@@ -220,6 +236,9 @@ main() {
     copr)
       copr_add "$@"
       copr_build "$@"
+    ;;
+    start)
+      do_all "$@"
     ;;
     help)
       show_help
