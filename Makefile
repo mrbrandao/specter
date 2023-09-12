@@ -1,8 +1,7 @@
 SHELL=/bin/bash
 INSTALL_DIR="$(HOME)/bin"
-FILES="specter"
-#FILES+="getcrate"
-#FILES+="vparse.py"
+FILES="specter.sh"
+FILES+="specter.conf"
 
 uninstall:
 	@(for i in $(FILES);do \
@@ -10,12 +9,12 @@ uninstall:
 		done)
 
 install:
-	@(for i in $(FILES);do \
+	@(cd scripts;for i in $(FILES);do \
 		install -v $$i $(INSTALL_DIR) ;\
 	done)
 
 link:
-	@(for i in $(FILES);do \
+	@(cd scripts;for i in $(FILES);do \
 		file=$$(realpath $$i) ;\
 		ln -sv $$file $(INSTALL_DIR) ;\
 	done)

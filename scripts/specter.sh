@@ -6,8 +6,8 @@ out="$3"
 install="$4"
 version="$5"
 crate_api="https://crates.io/api/v1/crates"
-repo=$(grep repo|awk -F'=' '{print $2}')
 build_root="${BUILD_ROOT:-$HOME/rpmbuild/SOURCES/}"
+. specter.conf
 
 #tput colors
 yellow=$(tput setaf 148)
