@@ -6,6 +6,7 @@ out="$3"
 install="$4"
 version="$5"
 crate_api="https://crates.io/api/v1/crates"
+repo=$(grep repo|awk -F'=' '{print $2}')
 build_root="${BUILD_ROOT:-$HOME/rpmbuild/SOURCES/}"
 
 #tput colors
@@ -100,6 +101,23 @@ install_dep() {
   if [[ ( -n "$flag" && "$flag" == "-i" ) ]];then
     sudo dnf -y install "$pkg" > /dev/null 2>&1
   fi
+
+copr_add(){
+  name="$2"
+  project="$3"
+  copr-cli add-package-scm --name "$name" \
+    --clone-url "$repo" \
+    --commit main --method rpkg \
+    --spec "$name".spec \
+    --subdir rpms/"$name" "$project"
+}
+
+copr_build(){
+  name="$2"
+  project="$3"
+  copr-cli buildscm --clone-url "$repo" \
+    --commit main --subdir rpms/"$name" \
+    --spec "$name".spec --method rpkg "$project"
 }
 
 show_missing_declared(){
@@ -115,6 +133,7 @@ show_help(){
     [declared]="# list the declared missing dependencies from the spec file"
     [parse]="# print the parsing result from the specter file"
     [getcrate]="# Download a crate file, using name and version"
+    [copr]="# create and build a package on copr"
     [help]="# this help command"
   )
   for key in "${!cmd_help[@]}";do
@@ -178,6 +197,10 @@ main() {
     ;;
     getcrate)
       get_crate "$@"
+    ;;
+    copr)
+      copr_add "$@"
+      copr_build "$@"
     ;;
     help)
       show_help
