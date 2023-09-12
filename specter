@@ -158,6 +158,7 @@ show_help(){
     [depinstall]="# Install dependencies from an rpm file"
     [copr]="# create and build a package on copr"
     [start]="# start the package project and try to build"
+    [copy]="# print the build requires and copy to clipboard"
     [help]="# this help command"
   )
   for key in "${!cmd_help[@]}";do
@@ -202,6 +203,8 @@ show_help(){
   # start the project and try to build
   ${cyan}${name} ${green}start ${yellow}foo 0.1.0${normal}
 
+  # copy the build requires to the clipboard and print on the stdout
+  ${cyan}${name} ${green}copy ${yellow}specter-foo.spec${normal}
 "
 }
 
@@ -220,6 +223,10 @@ main() {
     ;;
     requires)
       create_build_requires
+    ;;
+    copy)
+      pkg="$2"
+      "$0" requires specter-rust-"$pkg".spec -devel|xsel --clipboard|tee 
     ;;
     declared)
       show_missing_declared
