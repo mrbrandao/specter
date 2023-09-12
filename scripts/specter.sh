@@ -36,9 +36,9 @@ crate_parse() {
       sed -E 's/[()~]//g;
           s/^crate/rust-/g;
           s/ with crate/, rust-/g;
-					s,/,+,g'|\
-			sed -e "s/\(rust[-[:alnum:]*]\{2,\}\)/\1$version/g;
-							s/\(rust-\S*\)/\1$out/g"
+          s,/,+,g'|\
+      sed -e "s/\(rust[-[:alnum:]*]\{2,\}\)/\1$version/g;
+          s/\(rust-\S*\)/\1$out/g"
       )
     echo "$line"
   done < "$file"
