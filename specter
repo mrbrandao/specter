@@ -97,10 +97,21 @@ search_ver(){
 }
 
 install_dep() {
- 	flag="$install"
-  if [[ ( -n "$flag" && "$flag" == "-i" ) ]];then
-    sudo dnf -y install "$pkg" > /dev/null 2>&1
-  fi
+  flag="$install"
+  for i in "$@";do
+    if [[ ( -n "$flag" && "$flag" == "-i" ) ]];then
+      sudo dnf -y install "$pkg" > /dev/null 2>&1
+    fi
+  done
+}
+
+make_dep() {
+  pkg="$2"
+  tempfile="$(mktemp)"
+  rpm -ivh "$pkg" 2>&1|grep crate > "$tempfile"
+  $0 search "$tempfile" -devel -i
+  rm -f "$tempfile"
+}
 
 copr_add(){
   name="$2"
@@ -133,12 +144,13 @@ show_help(){
     [declared]="# list the declared missing dependencies from the spec file"
     [parse]="# print the parsing result from the specter file"
     [getcrate]="# Download a crate file, using name and version"
+    [depinstall]="# Install dependencies from an rpm file"
     [copr]="# create and build a package on copr"
     [help]="# this help command"
   )
   for key in "${!cmd_help[@]}";do
     value="${cmd_help[$key]}"
-    printf "%-13s %s\n" "${green}$key" "${normal}$value"
+    printf "%-20s %s\n" "${green}$key" "${normal}$value"
   done
 
   echo -ne "Examples:
@@ -168,13 +180,17 @@ show_help(){
 
   # print the $name-foo.spec parsing style
   ${cyan}$name ${green}parse ${yellow}$name-foo.spec ${red}-devel${normal}
+
+  # installing missing depencies from an RPM file
+  ${cyan}${name} ${green}depinstall ${yellow}rust-bar-devel.rpm${normal}
+
+  # create and build a package on copr
+  ${cyan}${name} ${green}copr ${yellow}rust-bar my-copr-project${normal}
 "
 }
 
 main() {
-	if [[ "$#" == 4 && "$install" != "-i" ]];then
-		version="$install"
-	elif [[ "$#" -lt 2 ]];then
+	if [[ "$#" -lt 2 ]];then
 		show_help
 		exit 1
 	fi
@@ -197,6 +213,9 @@ main() {
     ;;
     getcrate)
       get_crate "$@"
+    ;;
+    depinstall)
+      make_dep "$@"
     ;;
     copr)
       copr_add "$@"
