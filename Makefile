@@ -2,6 +2,7 @@ SHELL=/bin/bash
 INSTALL_DIR="$(HOME)/bin"
 FILES="specter.sh"
 FILES+="specter.conf"
+FILES+="specrender.py"
 
 uninstall:
 	@(for i in $(FILES);do \
