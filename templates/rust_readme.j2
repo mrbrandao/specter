@@ -1,0 +1,56 @@
+rust-{{ package_name }}
+-----------------------
+
+**{{ package_name }} {{package_version}}**  
+Required by:   
+{%- for i in requires %}
+  * [rust-{{ i }}](../rpms/rust-{{ i }})  
+{%- endfor %}
+
+**Status**  
+Package ready [via
+copr](https://copr.fedorainfracloud.org/coprs/mrbrandao/rust-chariott/package/rust-{{ package_name }}{% if vmin %}{{ package_version }}{% endif
+%}/)
+
+**Dependency tree:**  
+
+1. Missing dependencies:  
+```
+None, all batteries included
+```
+
+2. Tree of depencencies to build:  
+
+`[x]` = done  
+`[p]` = in progress  
+`[s]` = saddle  
+
+```
+[p] rust-{{ package_name }}-{{ package_version }}
+[x] |__rust-example
+[x]    |__rust-example
+```
+
+**Warnings**
+
+Building this package may end with error:  
+
+```
+```
+
+**Building Instructions**  
+
+1. build
+```bash
+dnf copr enable mrbrandao/rust-chariott
+dnf builddep rust-{{ package_name }}{% if vmin %}{{ package_version }}{% endif
+%}.spec
+rpmbuild -ba rust-{{ package_name }}{% if vmin %}{{ package_version }}{% endif
+%}.spec
+```
+
+2. install
+```bash
+dnf enable copr mrbrandao/rust-chariott
+dnf install rust-{{ package_name }}{%if vmin %}{{ package_version }}{% endif %}+default-devel
+```
