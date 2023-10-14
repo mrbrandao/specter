@@ -19,3 +19,9 @@ link:
 		file=$$(realpath $$i) ;\
 		ln -sv $$file $(INSTALL_DIR) ;\
 	done)
+
+pip_install:
+	@(pip install --editable .)
+
+pip_uninstall:
+	@(pip uninstall -y specter)
