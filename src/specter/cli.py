@@ -3,7 +3,7 @@ The main cli execution
 """
 from typing import Optional
 import click
-from . import __version__
+from . import formater, crate, packages, __version__
 
 def ver():
     """
@@ -39,3 +39,14 @@ def search(_ctx: click.Context, **kwargs):
     """
     click.echo(f'searching {kwargs["input_"]}')
     click.echo(f'searching {kwargs}')
+    pkgs = packages.parse(kwargs['input_'])
+    crate.crate_to_rpm(pkgs)
+
+    if kwargs['list_']:
+        sizes = formater.header()
+        for pkg in pkgs:
+            pkg['avaver'] = "Not Searched"
+            pkg['status'] = "MISS"
+            formater.info(sizes, pkg)
+    else:
+        packages.search(kwargs, pkgs)
