@@ -33,3 +33,4 @@ tags
 [._]*.un~
 # Custom Local
 scripts/*.conf
+.venv/
