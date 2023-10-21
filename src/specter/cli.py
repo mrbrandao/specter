@@ -31,15 +31,17 @@ def cli(ctx, version):
               show_default=True,
               help='Define the mdapi branch to search'
               )
-@click.option('-l','--list','list_', is_flag=True,help='List dependencies')
-@click.option('-o','--out', default='specter-search.json',help='Save the search file')
+@click.option('-l','--list','list_', is_flag=True,help='List dependencies '
+              'without searching')
+@click.option('-o','--out', default='specter-search.json',help='Save the '
+              'search file')
 @click.pass_context
 def search(_ctx: click.Context, **kwargs):
     """
     Search for package dependencies
     """
-    click.echo(f'searching {kwargs["input_"]}')
-    click.echo(f'searching {kwargs}')
+    formater.console.print(
+            f"searching: [{formater.Colors.yellow}]{kwargs['input_']}[/]")
     pkgs = packages.parse(kwargs['input_'])
     crate.crate_to_rpm(pkgs)
 

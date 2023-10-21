@@ -18,9 +18,9 @@ def generate(in_file):
     """
     requires_list = load_file(in_file)
     for requires in requires_list:
-        print(f"BuildRequires:  \
-{requires['rpm_name']} {requires['minsig']} {requires['minver']}, \
-{requires['rpm_name']} {requires['maxsig']} {requires['maxver']}")
+        print('BuildRequires: '
+        f'{requires["rpm_name"]} {requires["minsig"]} {requires["minver"]}, '
+        f'{requires["rpm_name"]} {requires["maxsig"]} {requires["maxver"]}')
 
 def do_list(in_file):
     """

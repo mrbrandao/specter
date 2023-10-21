@@ -11,8 +11,9 @@ class Colors:
     """
     Declares the custom colors
     """
-    green = "#63d313"
-    red = "#f23033"
+    green = "#00d700"
+    red = "#ff5555"
+    yellow = "#abd102"
 
 def header():
     """
