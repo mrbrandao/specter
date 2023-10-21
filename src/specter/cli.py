@@ -34,7 +34,7 @@ def cli(ctx, version):
 @click.option('-l','--list','list_', is_flag=True,help='List dependencies '
               'without searching')
 @click.option('-o','--out', default='specter-search.json',help='Save the '
-              'search file')
+              'search file', show_default=True)
 @click.pass_context
 def search(_ctx: click.Context, **kwargs):
     """
@@ -65,12 +65,15 @@ def search(_ctx: click.Context, **kwargs):
 @click.option('-l','--list','list_',
               is_flag=True, help='List searched packges'
               )
+@click.option('-c','--clip', is_flag=True, help='Copy the BuildRequires to '
+              'the clipboard'
+              )
 @click.pass_context
 def requires(_ctx: click.Context, **kwargs):
     """
     Generate the BuildRequires list
     """
     if not kwargs['list_'] or kwargs['print_']:
-        req.generate(kwargs['input_'])
+        req.generate(kwargs['input_'], kwargs['clip'])
     elif kwargs['list_']:
         req.do_list(kwargs['input_'])

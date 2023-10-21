@@ -2,6 +2,7 @@
 render the requires command 
 """
 import json
+import pyperclip
 from . import formater
 
 def load_file(in_file):
@@ -12,15 +13,29 @@ def load_file(in_file):
         requires_list = json.load(file)
     return requires_list
 
-def generate(in_file):
+def generate(in_file, clip):
     """
     receive a json file and print the BuildRequires to stdout
     """
     requires_list = load_file(in_file)
+    current_clip = ''
+    if clip:
+        formater.console.print(
+                f'[{formater.Colors.yellow}][i]Copying to clipboard,[/]'
+                '[i]paste it in your spec file under the '
+                f'[bold {formater.Colors.green}]BuildRequires [/]'
+                f'[{formater.Colors.yellow}]session...[/]')
     for requires in requires_list:
-        print('BuildRequires: '
-        f'{requires["rpm_name"]} {requires["minsig"]} {requires["minver"]}, '
-        f'{requires["rpm_name"]} {requires["maxsig"]} {requires["maxver"]}')
+        out = ('BuildRequires: '
+            f'{requires["rpm_name"]} {requires["minsig"]} {requires["minver"]}, '
+            f'{requires["rpm_name"]} {requires["maxsig"]} {requires["maxver"]}')
+        print(out)
+        if clip:
+            if current_clip != '':
+                current_clip = current_clip + '\n' + out
+            else:
+                current_clip = out
+            pyperclip.copy(current_clip)
 
 def do_list(in_file):
     """
