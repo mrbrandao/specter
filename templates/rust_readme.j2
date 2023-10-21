@@ -3,8 +3,9 @@ rust-{{ package_name }}
 
 **{{ package_name }} {{package_version}}**  
 Required by:   
+  
 {%- for i in requires %}
-  * [rust-{{ i }}](../rpms/rust-{{ i }})  
+ * [rust-{{ i }}](../rpms/rust-{{ i }})  
 {%- endfor %}
 
 **Status**  
@@ -31,12 +32,36 @@ None, all batteries included
 [x]    |__rust-example
 ```
 
+-------------------------
+
 **Warnings**
 
 Building this package may end with error:  
 
 ```
+*** ERROR:
 ```
+
+**Fix it**:  
+
+```
+# undefine the shebang in spec file
+%undefine __brp_mangle_shebangs
+```
+
+When building it with check the tests may fail, build it without check:  
+
+1. _disable the checks on the spec file:_  
+e.g: change `%bcond_without check` to `%bcond_with check` in the spec file  
+
+2. _disable the check while building:_  
+
+```bash
+rpmbuild -ba rust-{{ package_name }}{% if vmin %}{{ package_version }}{% endif
+%} --nocheck
+```
+
+-------------------------
 
 **Building Instructions**  
 

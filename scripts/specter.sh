@@ -138,7 +138,7 @@ show_missing_declared(){
 do_all(){
   pkg="$2"
   ver="$3"
-  rust2rpm "$pkg" "$ver"
+  rust2rpm --no-existence-check "$pkg" "$ver"
   $0 getcrate "$pkg" "$ver"
   if ! rpmbuild -ba rust-"$pkg".spec; then
     $0 init rust-"$pkg".spec
