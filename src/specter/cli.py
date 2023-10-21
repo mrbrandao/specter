@@ -32,6 +32,7 @@ def cli(ctx, version):
               help='Define the mdapi branch to search'
               )
 @click.option('-l','--list','list_', is_flag=True,help='List dependencies')
+@click.option('-o','--out', default='specter-search.json',help='Save the search file')
 @click.pass_context
 def search(_ctx: click.Context, **kwargs):
     """
@@ -50,3 +51,15 @@ def search(_ctx: click.Context, **kwargs):
             formater.info(sizes, pkg)
     else:
         packages.search(kwargs, pkgs)
+
+@cli.command()
+@click.option('-i','--input','input_',
+              default='specter-search.json', help='Path to input file',
+              show_default=True
+              )
+@click.pass_context
+def requires(_ctx: click.Context, **kwargs):
+    """
+    Generate the BuildRequires list
+    """
+    packages.generate_requires(kwargs['input_'])

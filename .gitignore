@@ -4,6 +4,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.egg*
+build/*
 
 # C extensions
 *.so
@@ -35,3 +36,4 @@ tags
 # Custom Local
 scripts/*.conf
 .venv/
+specter*.json

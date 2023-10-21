@@ -4,6 +4,7 @@ packages:
 """
 import re
 import time
+import json
 import requests
 from . import formater
 
@@ -34,6 +35,17 @@ def parse(in_file):
                   "maxsig": maxsig, "maxver": maxver }
             pkgs.append(pkg)
     return pkgs
+
+def generate_requires(in_file):
+    """
+    receive a json file and print the BuildRequires to stdout
+    """
+    with open(in_file, 'r', encoding='utf-8') as file:
+        requires_list = json.load(file)
+        for requires in requires_list:
+            print(f"BuildRequires:  \
+{requires['rpm_name']} {requires['minsig']} {requires['minver']}, \
+{requires['rpm_name']} {requires['maxsig']} {requires['maxver']}")
 
 def search(args, pkgs):
     """
@@ -71,6 +83,9 @@ def search(args, pkgs):
             pkg = version_compare(pkg)
         time.sleep(1)
         formater.info(sizes, pkg)
+    if args['out']:
+        with open(args['out'], 'w', encoding="utf-8") as file:
+            file.write(json.dumps(pkgs))
     return pkgs
 
 def version_compare(pkg):
