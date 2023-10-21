@@ -1,9 +1,9 @@
 """
 The main cli execution
 """
-from typing import Optional
 import click
 from . import formater, crate, packages, __version__
+from . import requires as req
 
 def ver():
     """
@@ -57,9 +57,18 @@ def search(_ctx: click.Context, **kwargs):
               default='specter-search.json', help='Path to input file',
               show_default=True
               )
+@click.option('-p','--print','print_',
+              is_flag=True, help='Print the BuildRequires to the stdout'
+              )
+@click.option('-l','--list','list_',
+              is_flag=True, help='List searched packges'
+              )
 @click.pass_context
 def requires(_ctx: click.Context, **kwargs):
     """
     Generate the BuildRequires list
     """
-    packages.generate_requires(kwargs['input_'])
+    if not kwargs['list_'] or kwargs['print_']:
+        req.generate(kwargs['input_'])
+    elif kwargs['list_']:
+        req.do_list(kwargs['input_'])

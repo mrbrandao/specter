@@ -1,8 +1,18 @@
-#!/usr/bin/env python3
 """ 
     formater:
         format tables, lists and headers
 """
+from rich.console import Console
+
+console = Console(highlight=False)
+
+# pylint: disable=R0903
+class Colors:
+    """
+    Declares the custom colors
+    """
+    green = "#63d313"
+    red = "#f23033"
 
 def header():
     """
@@ -15,7 +25,7 @@ def header():
     f"{'Max Ver':<{sizes['maxver']}}"
     f"{'Available Ver':<{sizes['avaver']}}"
     f"{'Status':<{sizes['status']}}")
-    print(head)
+    console.print(head)
     return sizes
 
 def info(sizes, pkg):
@@ -23,10 +33,13 @@ def info(sizes, pkg):
     info:
         receives a package and print the info for it
     """
+    status = f"[{Colors.red}]{pkg['status']:<{sizes['status']}}[/]"
+    if pkg['status'] in 'FOUND':
+        status = f"[{Colors.green}]{pkg['status']:<{sizes['status']}}[/]"
     content = (
-    f"{pkg['rpm_name']:<{sizes['name']}}"
+    f"[no]{pkg['rpm_name']:<{sizes['name']}}"
     f"{pkg['minver']:<{sizes['minver']}}"
     f"{pkg['maxver']:<{sizes['maxver']}}"
-    f"{pkg['avaver']:<{sizes['avaver']}}"
-    f"{pkg['status']:<{sizes['status']}}")
-    print(content)
+    f"[no]{pkg['avaver']:<{sizes['avaver']}}"
+    f"{status}")
+    console.print(content)
