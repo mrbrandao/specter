@@ -4,7 +4,9 @@ packages:
 """
 import re
 import time
+import json
 import requests
+from pkg_resources import parse_version
 from . import formater
 
 def parse(in_file):
@@ -86,12 +88,11 @@ def version_compare(pkg):
     if not re.match(pattern, pkg['avaver']):
         return pkg
 
-    #if pkg['minver'] == "" or pkg['maxver'] == "" and pkg['avaver'] != "":
-    if pkg['avaver'] != "" and pkg['minver'] == "":
+    if parse_version(pkg['avaver']) != "" and parse_version(pkg['minver']) == "":
         pkg['status'] = 'FOUND'
         return pkg
 
-    if pkg['minver'] <= pkg['avaver'] < pkg['maxver']:
+    if parse_version(pkg['minver']) <= parse_version(pkg['avaver']) < parse_version(pkg['maxver']):
         pkg['status'] = 'FOUND'
     return pkg
 
