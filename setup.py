@@ -1,4 +1,10 @@
-from setuptools import setup, find_packages
+"""
+autosetuptools settings for this module
+install it:
+    developer mode: `pip install --editable .`
+    user mode: `pip install --user .`
+"""
+from setuptools import setup
 
 setup(
   name='specter',

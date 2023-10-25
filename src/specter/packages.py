@@ -51,10 +51,10 @@ def search(args, pkgs):
         pkg_name = pkg['rpm_name']
         req = f"{url}{branch}/pkg/{pkg_name}"
         response = requests.get(req,timeout=30)
-        #print(version)
-        #print(response.text)
         if response.status_code != 200:
             pkg['avaver'] = 'MISS'
+            pkg['status'] = 'NOT'
+            formater.info(sizes, pkg)
             continue
         data = response.json()
         pkg['avaver'] = data['version']

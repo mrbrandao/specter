@@ -35,12 +35,17 @@ def info(sizes, pkg):
         receives a package and print the info for it
     """
     status = f"[{Colors.red}]{pkg['status']:<{sizes['status']}}[/]"
+    avaver = f"{pkg['avaver']:<{sizes['avaver']}}"
+
     if pkg['status'] in 'FOUND':
         status = f"[{Colors.green}]{pkg['status']:<{sizes['status']}}[/]"
+    elif pkg['avaver'] in 'MISS':
+        avaver = f"[{Colors.yellow}]{pkg['avaver']:<{sizes['avaver']}}[/]"
+
     content = (
-    f"[no]{pkg['rpm_name']:<{sizes['name']}}"
+    f"{pkg['rpm_name']:<{sizes['name']}}"
     f"{pkg['minver']:<{sizes['minver']}}"
     f"{pkg['maxver']:<{sizes['maxver']}}"
-    f"[no]{pkg['avaver']:<{sizes['avaver']}}"
+    f"{avaver}"
     f"{status}")
     console.print(content)
