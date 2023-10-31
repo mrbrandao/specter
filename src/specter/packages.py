@@ -16,6 +16,7 @@ def parse(in_file):
     """
     pkgs = []
     sigs = r'[=<>]'
+    version_pattern = r'^\d.{2,}'
     with open(in_file, "r", encoding="utf-8") as file:
         lines = file.readlines()
         for line in lines:
@@ -26,12 +27,16 @@ def parse(in_file):
             maxsig = ""
             maxver = ""
             if len(values) > 5:
-                minver = values[2]
+                if re.match(version_pattern,values[2]):
+                    minver = values[2]
                 if re.search(sigs,values[1]):
                     minsig = values[1]
-                maxver = values[6].replace('~)',"")
+                if re.match(version_pattern,values[6]):
+                    maxver = values[6].replace('~)',"")
                 if re.search(sigs,values[5]):
                     maxsig= values[5]
+                if minver != '' and maxver == '' and minsig in '=':
+                    maxver=minver
             pkg = {"name": name, "minsig": minsig, "minver": minver,
                   "maxsig": maxsig, "maxver": maxver }
             pkgs.append(pkg)
