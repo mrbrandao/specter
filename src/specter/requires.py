@@ -27,8 +27,11 @@ def generate(in_file, clip):
                 f'[{formater.Colors.yellow}]session...[/]')
     for requires in requires_list:
         out = ('BuildRequires: '
-            f'{requires["rpm_name"]} {requires["minsig"]} {requires["minver"]}, '
-            f'{requires["rpm_name"]} {requires["maxsig"]} {requires["maxver"]}')
+               f'{requires["rpm_name"]} {requires["minsig"]} {requires["minver"]}')
+        if requires['minsig'] not in '=':
+            out = ('BuildRequires: '
+                f'{requires["rpm_name"]} {requires["minsig"]} {requires["minver"]}, '
+                f'{requires["rpm_name"]} {requires["maxsig"]} {requires["maxver"]}')
         print(out)
         if clip:
             if current_clip != '':
