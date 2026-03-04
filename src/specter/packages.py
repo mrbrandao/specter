@@ -6,7 +6,7 @@ import re
 import time
 import json
 import requests
-from pkg_resources import parse_version
+from packaging.version import Version as parse_version
 from . import formater
 
 def parse(in_file):

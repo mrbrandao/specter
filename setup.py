@@ -14,6 +14,7 @@ setup(
                     'requests>=2.31.0,<3.0.0',
                     'rich>=13.6.0,<14.0.0',
                     'pyperclip>=1.8.2,<2.0.0',
+                    'packaging>=20.0',
                     ],
   package_dir={'':'src'},
   packages=['specter'],
